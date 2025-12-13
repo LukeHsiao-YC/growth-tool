@@ -61,7 +61,7 @@
     <div class="app-header">
         <h1 class="app-title">兒童生長評估決策輔助系統</h1>
         <div class="app-subtitle">蕭宇超醫師 整理</div>
-        <div class="app-version">Ver 4.7 (Final Sync with Flowchart)</div>
+        <div class="app-version">Ver 4.9 (Fixed Bone Age in GI Panel)</div>
     </div>
 
     <div class="card">
@@ -75,10 +75,10 @@
         </select>
 
         <label>目前身高 (cm) <span style="color:red">*必填 (用於計算 PAH)</span></label>
-        <input type="number" id="currentHeight" placeholder="例如: 135" oninput="calculateTH()">
+        <input type="number" id="currentHeight" placeholder="例如: 125" oninput="calculateTH()">
 
         <label>實際年齡 (歲)</label>
-        <input type="number" id="age" placeholder="例如: 10" oninput="updateQuestions()">
+        <input type="number" id="age" placeholder="例如: 8" oninput="updateQuestions()">
 
         <div class="section-title">遺傳資訊 (自動計算)</div>
         <div style="display: flex; gap: 15px;">
@@ -288,15 +288,26 @@
 
             if (!age) return;
 
+            // 性早熟問卷 (Age < limit OR Age Normal)
             document.getElementById('q_puberty').classList.remove('hidden');
 
             if (!gv && gv !== 0) return;
 
-            if (gv >= 4) {
-                 document.getElementById('q_boneage').classList.remove('hidden');
-                 
-                 if (gender === 'female' && gv <= 6) { 
+            // 1. 生長遲緩 (Path C): 必照骨齡
+            if (gv < 4) {
+                document.getElementById('q_boneage').classList.remove('hidden');
+                if (gender === 'female') { 
                      document.getElementById('q_turner').classList.remove('hidden');
+                 }
+            }
+            // 2. 正常 GV (Path B): 照骨齡
+            else if (gv >= 4 && gv <= 6) {
+                 document.getElementById('q_boneage').classList.remove('hidden');
+            }
+            // 3. 衝刺期 (Path A): 青春期年齡可選
+            else if (gv > 6) {
+                 if ((gender === 'female' && age >= 8) || (gender === 'male' && age >= 9)) {
+                     document.getElementById('q_boneage').classList.remove('hidden');
                  }
             }
         }
@@ -327,7 +338,6 @@
             const bmiStatus = document.getElementById('bmiStatus').value;
             const sga = document.querySelector('input[name="sga"]:checked').value;
             const pubertySign = document.getElementById('pubertySign').value;
-            const pubertyProgression = document.getElementById('pubertyProgression').value;
             const boneAgeStatus = document.getElementById('boneAgeStatus').value;
             const pahStatus = document.getElementById('pahStatus').value;
             const turnerCheck = document.getElementById('turnerCheck').value;
@@ -356,7 +366,6 @@
                  }
             }
 
-            // --- 邏輯判斷開始 ---
             if (isGrowthClosing) {
                 title = "🟢 生長趨緩/閉合期 (正常現象)";
                 colorClass = "alert-gray";
@@ -367,7 +376,6 @@
                  colorClass = "alert-red";
                  html = `<strong>判斷：</strong>SGA 且未追趕生長。<br><strong>行動：</strong>轉介兒科內分泌。`;
             }
-            // 性早熟 (Path A)
             else if ( ((gender === 'female' && age < 8) || (gender === 'male' && age < 9)) && pubertySign === 'yes' ) {
                 title = "🔴 建議轉介 (完整性早熟鑑別)";
                 colorClass = "alert-red";
@@ -376,13 +384,12 @@
                     <strong>建議開立檢查套餐 (Workup Panel)：</strong>
                     <ul class='workup-list'>
                         <li><strong>1. 核心荷爾蒙：</strong>Basal LH, FSH, E2/Testo</li>
-                        <li><strong>2. 確診：</strong>GnRH (LHRH) 刺激測驗</li>
-                        <li><strong>3. 排它 (Rule out)：</strong>TSH, Free T4, 17-OHP, Tumor markers</li>
+                        <li><strong>2. 確診：</strong>GnRH 刺激測驗</li>
+                        <li><strong>3. 排它：</strong>TSH, Free T4, 17-OHP, Tumor markers</li>
                         <li><strong>4. 影像：</strong>骨齡, 腦部 MRI</li>
                     </ul>
                 `;
             }
-            // 正常衝刺 (Path A/B 變體)
             else if (isNormalPubertySpurt) {
                 if (pahStatus === 'poor') {
                     title = "🟠 警示：青春期衝刺但預估身高受損";
@@ -394,7 +401,6 @@
                     html = `<strong>判斷：</strong>正常生理現象。<br><strong>建議：</strong>觀察即可。`;
                 }
             }
-            // 正常發育 (Path B 變體)
             else if (isNormalPubertyOnset) {
                 if (pahStatus === 'poor') {
                      title = "🟠 警示：正常發育但預估身高不佳";
@@ -403,10 +409,7 @@
                 } else {
                      title = "🔵 正常青春期發育 (Normal Puberty)";
                      colorClass = "alert-blue";
-                     html = `
-                        <strong>判斷：</strong>發育年齡正常，生長速率正常。<br>
-                        <strong>建議：</strong>不需全套性早熟檢查，僅需追蹤骨齡與身高。
-                     `;
+                     html = `<strong>判斷：</strong>發育年齡正常，生長速率正常。<br><strong>建議：</strong>不需全套性早熟檢查，僅需追蹤骨齡與身高。`;
                 }
             }
             else if (gv > 6) {
@@ -414,9 +417,8 @@
                 colorClass = "alert-green";
                 html = `<strong>判斷：</strong>生長快速但無性徵，可能為遺傳高大。`;
             }
-            // 生長遲緩 (Path C) - 更新版
+            // 生長遲緩 (Path C) - 修正：兩條路徑都加骨齡
             else if (gv < 4) {
-                 // 腸胃型
                  if (bmiStatus === 'thin') {
                     title = "🔴 建議轉介 (腸胃/代謝型)";
                     colorClass = "alert-red";
@@ -424,15 +426,15 @@
                         <strong>懷疑：</strong>營養不良、吸收不良、代謝性骨病。<br>
                         <strong>建議開立檢查 (GI Panel)：</strong>
                         <ul class='workup-list'>
-                            <li>CBC, Ferritin (貧血)</li>
-                            <li>tTG-IgA (乳糜瀉)</li>
-                            <li><strong>Ca, P, ALK-P</strong> (佝僂症/骨病)</li>
+                            <li><strong>1. 骨齡 (Bone Age) - 評估生長潛力</strong></li>
+                            <li>2. CBC, Ferritin (貧血)</li>
+                            <li>3. tTG-IgA (乳糜瀉)</li>
+                            <li>4. <strong>Ca, P, ALK-P</strong> (佝僂症/骨病)</li>
                         </ul>
                     `;
                  } 
-                 // 內分泌型 (含 Turner)
                  else {
-                    let turnerNote = (gender === 'female') ? "<li><strong>4. Karyotype (染色體) - 排除透納氏症</strong></li>" : "";
+                    let turnerNote = (gender === 'female') ? "<li><strong>5. Karyotype (染色體) - 排除透納氏症</strong></li>" : "";
                     
                     title = "🔴 建議轉介 (內分泌型)";
                     colorClass = "alert-red";
@@ -440,9 +442,10 @@
                         <strong>懷疑：</strong>生長激素缺乏 (GHD)、甲狀腺、染色體異常。<br>
                         <strong>建議開立檢查 (Endo Panel)：</strong>
                         <ul class='workup-list'>
-                            <li>1. 骨齡, IGF-1, IGF-BP3</li>
-                            <li>2. TSH, Free T4</li>
-                            <li>3. Ca, P, ALK-P</li>
+                            <li><strong>1. 骨齡 (Bone Age)</strong></li>
+                            <li>2. IGF-1, IGF-BP3 (生長激素)</li>
+                            <li>3. TSH, Free T4 (甲狀腺)</li>
+                            <li>4. Ca, P, ALK-P (骨病)</li>
                             ${turnerNote}
                         </ul>
                     `;
