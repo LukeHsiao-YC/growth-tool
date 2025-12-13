@@ -26,50 +26,23 @@
         .radio-group label { display: flex; align-items: center; font-weight: normal; cursor: pointer; background: #f8f9fa; padding: 10px 20px; border-radius: 6px; border: 1px solid #dee2e6; }
         .radio-group input { margin-right: 8px; }
         
-        .info-display {
-            background-color: #e8f6f3;
-            border: 1px solid #1abc9c;
-            color: #16a085;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-weight: bold;
-            text-align: center;
-            display: none;
-        }
-        .pah-result-box {
-            background-color: #f3e5f5;
-            border: 1px solid #9b59b6;
-            color: #6a1b9a;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-            margin-bottom: 15px;
-            text-align: center;
-            display: none;
-        }
+        .info-display { background-color: #e8f6f3; border: 1px solid #1abc9c; color: #16a085; padding: 15px; border-radius: 8px; margin-top: 15px; font-weight: bold; text-align: center; display: none; }
+        .pah-result-box { background-color: #f3e5f5; border: 1px solid #9b59b6; color: #6a1b9a; padding: 15px; border-radius: 8px; margin-top: 10px; margin-bottom: 15px; text-align: center; display: none; }
         .bp-type-tag { font-size: 0.8em; background: #fff; padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid #ccc; }
 
         button { background-color: #2980b9; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; margin-top: 25px; width: 100%; transition: background 0.3s; box-shadow: 0 4px 6px rgba(41, 128, 185, 0.2); }
         button:hover { background-color: #1c6ea4; transform: translateY(-1px); }
         
-        .calc-btn {
-            background-color: #8e44ad;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            border: none;
-            cursor: pointer;
-            margin-top: 10px;
-            width: auto;
-            display: inline-block;
-        }
+        .calc-btn { background-color: #8e44ad; color: white; padding: 8px 15px; border-radius: 6px; font-size: 0.9em; border: none; cursor: pointer; margin-top: 10px; width: auto; display: inline-block; }
         .calc-btn:hover { background-color: #732d91; }
 
         #resultArea { display: none; animation: fadeIn 0.5s; }
         .recommendation-card { padding: 20px; border-radius: 8px; margin-top: 15px; border-left: 6px solid; background-color: #fff; }
         
+        /* 列表樣式調整 */
+        .workup-list { margin-top: 10px; padding-left: 20px; text-align: left; }
+        .workup-list li { margin-bottom: 5px; }
+
         .alert-red { background-color: #fff5f5; border-color: #e53e3e; color: #c53030; }
         .alert-yellow { background-color: #fffff0; border-color: #d69e2e; color: #b7791f; }
         .alert-green { background-color: #f0fff4; border-color: #38a169; color: #2f855a; }
@@ -89,7 +62,7 @@
     <div class="app-header">
         <h1 class="app-title">兒童生長評估決策輔助系統</h1>
         <div class="app-subtitle">蕭宇超醫師 整理</div>
-        <div class="app-version">Ver 4.4 (Pubertal Potential Check)</div>
+        <div class="app-version">Ver 4.5 (Full Diagnostic Workup)</div>
     </div>
 
     <div class="card">
@@ -165,7 +138,6 @@
         <div id="q_boneage" class="hidden">
             <label style="color: #2980b9;">🦴 骨齡判讀 & PAH 計算</label>
             <span class="sub-label">若家長擔心最終身高不夠，請拍攝骨齡並輸入數值進行預估。</span>
-            
             <select id="boneAgeStatus" onchange="updatePAHQuestion()">
                 <option value="unknown">尚未拍攝</option>
                 <option value="match">骨齡 ≈ 年齡 (相符)</option>
@@ -176,7 +148,6 @@
             
             <div id="q_pah" class="hidden highlight-box">
                 <label class="purple-label">🟣 預估成人身高 (PAH) 計算機</label>
-                
                 <div style="display: flex; gap: 10px; align-items: flex-end;">
                     <div style="flex: 1;">
                         <label style="margin-top:0;">骨齡 (Bone Age, 歲)</label>
@@ -184,9 +155,7 @@
                     </div>
                     <button type="button" class="calc-btn" onclick="calculateFullPAH()">計算 PAH</button>
                 </div>
-
                 <div id="pahResult" class="pah-result-box"></div>
-
                 <label>PAH 評估結果 (自動填入)</label>
                 <select id="pahStatus">
                     <option value="unknown">請先點擊計算</option>
@@ -203,7 +172,6 @@
                 <option value="yes">是 (建議篩檢)</option>
             </select>
         </div>
-
     </div>
 
     <button onclick="analyze()">🚀 開始分析與產出建議</button>
@@ -211,7 +179,6 @@
     <div id="resultArea"></div>
 
     <script>
-        // Bayley-Pinneau Data
         const bpFullData = {
             male: {
                 average: { 6:64.9, 7:69.5, 8:73.9, 9:78.0, 10:81.3, 11:84.8, 11.5:86.6, 12:88.3, 12.5:90.3, 13:92.2, 13.5:94.2, 14:96.0, 14.5:97.2, 15:98.2, 15.5:98.9, 16:99.4, 17:99.8, 18:100 },
@@ -318,14 +285,12 @@
 
             if (!age) return;
 
-            // 性早熟篩檢
             if ((gender === 'female' && age < 8) || (gender === 'male' && age < 9)) {
                 document.getElementById('q_puberty').classList.remove('hidden');
             }
 
             if (!gv && gv !== 0) return;
 
-            // 1. 正常 GV (4-6) -> 顯示骨齡
             if (gv >= 4 && gv <= 6) {
                 document.getElementById('q_boneage').classList.remove('hidden');
                 if (gender === 'female') {
@@ -333,10 +298,7 @@
                 }
             }
             
-            // 2. 快 GV (>6)
             if (gv > 6) {
-                // 如果是正常青春期年齡，雖然 GV 快是正常的，但家長可能擔心 PAH
-                // 所以這裡也開放骨齡選項，讓醫師決定是否要算
                  if ((gender === 'female' && age >= 8) || (gender === 'male' && age >= 9)) {
                      document.getElementById('q_boneage').classList.remove('hidden');
                  }
@@ -376,17 +338,13 @@
             const gv = parseFloat(document.getElementById('gv').value);
             const bmiStatus = document.getElementById('bmiStatus').value;
             const sga = document.querySelector('input[name="sga"]:checked').value;
-            
             const pubertySign = document.getElementById('pubertySign').value;
             const pubertyProgression = document.getElementById('pubertyProgression').value;
             const boneAgeStatus = document.getElementById('boneAgeStatus').value;
             const pahStatus = document.getElementById('pahStatus').value;
             const turnerCheck = document.getElementById('turnerCheck').value;
 
-            if (!age || (gv !== 0 && !gv)) {
-                alert("請先輸入年齡與生長速率！");
-                return;
-            }
+            if (!age || (gv !== 0 && !gv)) { alert("請先輸入年齡與生長速率！"); return; }
 
             let html = "";
             let title = "";
@@ -398,7 +356,6 @@
                 if (gender === 'male' && age >= 16) isGrowthClosing = true;
             }
 
-            // 判斷是否為正常青春期衝刺
             let isNormalPubertySpurt = false;
             if (gv > 6) {
                 if ((gender === 'female' && age >= 8) || (gender === 'male' && age >= 9)) {
@@ -409,49 +366,44 @@
             if (isGrowthClosing) {
                 title = "🟢 生長趨緩/閉合期 (正常現象)";
                 colorClass = "alert-gray";
-                html = `<strong>判斷：</strong>青春期尾聲，生長板接近閉合，GV 下降為正常生理現象。<br><strong>建議：</strong>不需轉介。可拍攝骨齡確認閉合程度。`;
+                html = `<strong>判斷：</strong>青春期尾聲，生長板接近閉合，GV 下降為正常生理現象。<br><strong>建議：</strong>不需轉介。`;
             }
             else if (sga === 'yes' && gv < 4 && age > 4) {
                  title = "🔴 建議轉介 (SGA 適應症)";
                  colorClass = "alert-red";
                  html = `<strong>判斷：</strong>SGA 且未追趕生長，符合生長激素治療適應症。<br><strong>行動：</strong>轉介兒科內分泌。`;
             }
+            // --- 性早熟詳細鑑別邏輯 (Updated) ---
             else if ( ((gender === 'female' && age < 8) || (gender === 'male' && age < 9)) && pubertySign === 'yes' ) {
-                if (pubertyProgression === 'fast' || boneAgeStatus === 'advance') {
-                    if (pahStatus === 'poor') {
-                        title = "🔴 強烈建議轉介 (性早熟且 PAH 受損)";
-                        colorClass = "alert-red";
-                        html = `<strong>判斷：</strong>疑似中樞性性早熟 (CPP) 且 PAH 嚴重受損。<br><strong>行動：</strong>需轉介評估 GnRHa 治療。`;
-                    } else if (pahStatus === 'good') {
-                        title = "🟡 轉介評估 / 密切觀察 (PAH 尚可)";
-                        colorClass = "alert-yellow";
-                        html = `<strong>判斷：</strong>雖有早熟跡象，但 PAH 仍在遺傳範圍內。可討論是否僅需觀察。`;
-                    } else {
-                         title = "🔴 建議轉介 (疑似性早熟 CPP)";
-                         colorClass = "alert-red";
-                         html = `<strong>判斷：</strong>性徵明顯且進程快。請轉介專科。`;
-                    }
-                } else {
-                     title = "🟢 良性變異 (單純早熟)";
-                     colorClass = "alert-green";
-                     html = `<strong>判斷：</strong>性徵進程緩慢，骨齡未超前。定期追蹤即可。`;
-                }
+                title = "🔴 建議轉介 (完整性早熟鑑別)";
+                colorClass = "alert-red";
+                html = `
+                    <strong>判斷：</strong>符合早熟年齡且有性徵，需進行完整病因鑑別。<br>
+                    <strong>建議開立檢查 (Precocious Puberty Workup)：</strong>
+                    <ul class='workup-list'>
+                        <li><strong>1. 核心荷爾蒙：</strong>Basal LH, FSH, E2 (女) / Testosterone (男)。</li>
+                        <li><strong>2. 確診測試：</strong>GnRH 刺激測驗 (LHRH Test) - 若 Basal LH > 0.3 或臨床高度懷疑。</li>
+                        <li><strong>3. 排除其他病因 (Rule out)：</strong>
+                            <ul>
+                                <li>TSH, Free T4 (排除甲狀腺低下)</li>
+                                <li>17-OHP (排除先天性腎上腺增生 CAH)</li>
+                                <li>β-HCG, α-AFP (排除生殖細胞瘤/肝腫瘤)</li>
+                            </ul>
+                        </li>
+                        <li><strong>4. 影像檢查：</strong>骨齡 (Bone Age)、腦部 MRI (排除腦垂體/下視丘腫瘤)。</li>
+                    </ul>
+                `;
             }
+            // ----------------------------------
             else if (isNormalPubertySpurt) {
-                // 特殊判斷：如果是正常衝刺，但 PAH 顯示受損
                 if (pahStatus === 'poor') {
                     title = "🟠 警示：青春期衝刺但預估身高受損";
                     colorClass = "alert-orange";
-                    html = `
-                        <strong>判斷：</strong>目前生長速度正常(青春期衝刺)，但<strong>骨齡老化過快</strong>，導致預估身高 (PAH) 低於遺傳目標。<br>
-                        <strong>建議行動：</strong>
-                        1. 轉介兒科內分泌科，討論是否有延緩骨齡的空間。<br>
-                        2. 嚴格執行生活作息調整 (睡眠/飲食/運動) 以最大化剩餘潛力。
-                    `;
+                    html = `<strong>判斷：</strong>骨齡老化過快，PAH 低於遺傳目標。<br><strong>建議：</strong>轉介討論延緩策略。`;
                 } else {
-                    title = "🟢 正常的青春期生長衝刺 (Pubertal Spurt)";
+                    title = "🟢 正常的青春期生長衝刺";
                     colorClass = "alert-green";
-                    html = `<strong>判斷：</strong>年齡符合青春期，出現生長加速為正常生理現象。<br><strong>建議：</strong>觀察即可。目前 PAH 預估落點良好。`;
+                    html = `<strong>判斷：</strong>正常生理現象。<br><strong>建議：</strong>觀察即可。`;
                 }
             }
             else if (gv > 6) {
