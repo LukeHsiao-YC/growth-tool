@@ -48,15 +48,7 @@
             text-align: center;
             display: none;
         }
-        /* 顯示目前使用的 BP 表格類型 */
-        .bp-type-tag {
-            font-size: 0.8em;
-            background: #fff;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin-left: 10px;
-            border: 1px solid #ccc;
-        }
+        .bp-type-tag { font-size: 0.8em; background: #fff; padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid #ccc; }
 
         button { background-color: #2980b9; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; margin-top: 25px; width: 100%; transition: background 0.3s; box-shadow: 0 4px 6px rgba(41, 128, 185, 0.2); }
         button:hover { background-color: #1c6ea4; transform: translateY(-1px); }
@@ -83,6 +75,7 @@
         .alert-green { background-color: #f0fff4; border-color: #38a169; color: #2f855a; }
         .alert-blue { background-color: #ebf8ff; border-color: #3182ce; color: #2b6cb0; }
         .alert-gray { background-color: #f8f9fa; border-color: #95a5a6; color: #7f8c8d; }
+        .alert-orange { background-color: #fff3e0; border-color: #e67e22; color: #d35400; }
         
         .highlight-box { background: rgba(0,0,0,0.03); padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 0.95em; }
         .hidden { display: none; }
@@ -96,7 +89,7 @@
     <div class="app-header">
         <h1 class="app-title">兒童生長評估決策輔助系統</h1>
         <div class="app-subtitle">蕭宇超醫師 整理</div>
-        <div class="app-version">Ver 4.2 (Full Bayley-Pinneau Logic)</div>
+        <div class="app-version">Ver 4.4 (Pubertal Potential Check)</div>
     </div>
 
     <div class="card">
@@ -110,10 +103,10 @@
         </select>
 
         <label>目前身高 (cm) <span style="color:red">*必填 (用於計算 PAH)</span></label>
-        <input type="number" id="currentHeight" placeholder="例如: 128.5" oninput="calculateTH()">
+        <input type="number" id="currentHeight" placeholder="例如: 145" oninput="calculateTH()">
 
         <label>實際年齡 (歲)</label>
-        <input type="number" id="age" placeholder="例如: 8" oninput="updateQuestions()">
+        <input type="number" id="age" placeholder="例如: 12" oninput="updateQuestions()">
 
         <div class="section-title">遺傳資訊 (自動計算)</div>
         <div style="display: flex; gap: 15px;">
@@ -171,7 +164,7 @@
 
         <div id="q_boneage" class="hidden">
             <label style="color: #2980b9;">🦴 骨齡判讀 & PAH 計算</label>
-            <span class="sub-label">請選擇骨齡狀態，並輸入骨齡數值。系統將自動選擇 (Average/Accelerated/Retarded) 表格。</span>
+            <span class="sub-label">若家長擔心最終身高不夠，請拍攝骨齡並輸入數值進行預估。</span>
             
             <select id="boneAgeStatus" onchange="updatePAHQuestion()">
                 <option value="unknown">尚未拍攝</option>
@@ -187,7 +180,7 @@
                 <div style="display: flex; gap: 10px; align-items: flex-end;">
                     <div style="flex: 1;">
                         <label style="margin-top:0;">骨齡 (Bone Age, 歲)</label>
-                        <input type="number" id="boneAgeValue" placeholder="例如: 9.5">
+                        <input type="number" id="boneAgeValue" placeholder="例如: 13.5">
                     </div>
                     <button type="button" class="calc-btn" onclick="calculateFullPAH()">計算 PAH</button>
                 </div>
@@ -218,8 +211,7 @@
     <div id="resultArea"></div>
 
     <script>
-        // --- 完整的 Bayley-Pinneau 三表數據 (標準值) ---
-        // 數值含義：% of Adult Height Achieved at given Bone Age
+        // Bayley-Pinneau Data
         const bpFullData = {
             male: {
                 average: { 6:64.9, 7:69.5, 8:73.9, 9:78.0, 10:81.3, 11:84.8, 11.5:86.6, 12:88.3, 12.5:90.3, 13:92.2, 13.5:94.2, 14:96.0, 14.5:97.2, 15:98.2, 15.5:98.9, 16:99.4, 17:99.8, 18:100 },
@@ -233,8 +225,6 @@
             }
         };
 
-        // --- 功能函數 ---
-
         function calculateTH() {
             const gender = document.getElementById('gender').value;
             const father = parseFloat(document.getElementById('fatherHt').value);
@@ -245,9 +235,7 @@
                 let midParentalHeight = (gender === 'male') ? (father + mother + 12) / 2 : (father + mother - 12) / 2;
                 const lower = (midParentalHeight - 7.5).toFixed(1);
                 const upper = (midParentalHeight + 7.5).toFixed(1);
-                
                 displayDiv.dataset.midTh = midParentalHeight;
-                
                 displayDiv.style.display = 'block';
                 displayDiv.innerHTML = `🧬 遺傳目標身高 (Target Height): <br><span style="font-size:1.2em">${midParentalHeight.toFixed(1)} cm</span> <br><span style="font-size:0.8em; font-weight:normal">(區間: ${lower} ~ ${upper} cm)</span>`;
             } else {
@@ -258,7 +246,7 @@
 
         function calculateFullPAH() {
             const gender = document.getElementById('gender').value;
-            const age = parseFloat(document.getElementById('age').value); // Chronological Age
+            const age = parseFloat(document.getElementById('age').value);
             const currentHt = parseFloat(document.getElementById('currentHeight').value);
             const boneAge = parseFloat(document.getElementById('boneAgeValue').value);
             const resultBox = document.getElementById('pahResult');
@@ -266,32 +254,19 @@
             const thDisplay = document.getElementById('thDisplay');
 
             if (!currentHt || !boneAge || !age) {
-                alert("請輸入「年齡」、「目前身高」與「骨齡」數值！");
+                alert("請輸入完整資料！");
                 return;
             }
 
-            // 1. 決定使用哪一張表 (關鍵邏輯)
-            // BA - CA > 1 -> Accelerated (超前)
-            // BA - CA < -1 -> Retarded (落後)
-            // 否則 -> Average (相符)
-            
             let diff = boneAge - age;
             let category = 'average';
             let catText = '相符型 (Average)';
-            
-            if (diff >= 1) {
-                category = 'accelerated';
-                catText = '快進型 (Accelerated)';
-            } else if (diff <= -1) {
-                category = 'retarded';
-                catText = '遲緩型 (Retarded)';
-            }
+            if (diff >= 1) { category = 'accelerated'; catText = '快進型 (Accelerated)'; } 
+            else if (diff <= -1) { category = 'retarded'; catText = '遲緩型 (Retarded)'; }
 
-            // 2. 查表
             let table = bpFullData[gender][category];
             let percent = 0;
             
-            // 找最接近的 Key
             let closestBA = Object.keys(table).reduce((prev, curr) => {
                 return (Math.abs(curr - boneAge) < Math.abs(prev - boneAge) ? curr : prev);
             });
@@ -303,17 +278,13 @@
                 return;
             }
 
-            // 3. 計算 PAH
             let pah = currentHt / (percent / 100);
             
-            // 4. 比較 TH (性別閾值)
             let thMsg = "";
             let midTh = parseFloat(thDisplay.dataset.midTh);
-            
             if (midTh) {
                 let gap = pah - midTh;
-                let threshold = (gender === 'male') ? 7.5 : 5.5; // v4.1 的修正
-                
+                let threshold = (gender === 'male') ? 7.5 : 5.5;
                 if (gap < -threshold) {
                     statusSelect.value = "poor";
                     thMsg = `<br><span style='color:#c0392b'>📉 低於遺傳目標 (差距 > ${threshold}cm)</span>`;
@@ -323,7 +294,6 @@
                 }
             }
 
-            // 5. 顯示結果 (含表格類型標籤)
             resultBox.style.display = 'block';
             resultBox.innerHTML = `
                 <div style="margin-bottom:5px;">
@@ -348,17 +318,28 @@
 
             if (!age) return;
 
+            // 性早熟篩檢
             if ((gender === 'female' && age < 8) || (gender === 'male' && age < 9)) {
                 document.getElementById('q_puberty').classList.remove('hidden');
             }
 
             if (!gv && gv !== 0) return;
 
+            // 1. 正常 GV (4-6) -> 顯示骨齡
             if (gv >= 4 && gv <= 6) {
                 document.getElementById('q_boneage').classList.remove('hidden');
                 if (gender === 'female') {
                     document.getElementById('q_turner').classList.remove('hidden');
                 }
+            }
+            
+            // 2. 快 GV (>6)
+            if (gv > 6) {
+                // 如果是正常青春期年齡，雖然 GV 快是正常的，但家長可能擔心 PAH
+                // 所以這裡也開放骨齡選項，讓醫師決定是否要算
+                 if ((gender === 'female' && age >= 8) || (gender === 'male' && age >= 9)) {
+                     document.getElementById('q_boneage').classList.remove('hidden');
+                 }
             }
             
             const pubSign = document.getElementById('pubertySign').value;
@@ -377,8 +358,6 @@
                 boneAgeDiv.classList.remove('hidden'); 
             } else {
                 detailDiv.classList.add('hidden');
-                const gv = parseFloat(document.getElementById('gv').value);
-                if (gv > 6) boneAgeDiv.classList.add('hidden');
             }
         }
 
@@ -419,6 +398,14 @@
                 if (gender === 'male' && age >= 16) isGrowthClosing = true;
             }
 
+            // 判斷是否為正常青春期衝刺
+            let isNormalPubertySpurt = false;
+            if (gv > 6) {
+                if ((gender === 'female' && age >= 8) || (gender === 'male' && age >= 9)) {
+                    isNormalPubertySpurt = true;
+                }
+            }
+
             if (isGrowthClosing) {
                 title = "🟢 生長趨緩/閉合期 (正常現象)";
                 colorClass = "alert-gray";
@@ -434,7 +421,7 @@
                     if (pahStatus === 'poor') {
                         title = "🔴 強烈建議轉介 (性早熟且 PAH 受損)";
                         colorClass = "alert-red";
-                        html = `<strong>判斷：</strong>疑似中樞性性早熟 (CPP) 且 PAH 嚴重受損。<br><strong>行動：</strong>需轉介評估 GnRHa 治療與腦部 MRI。`;
+                        html = `<strong>判斷：</strong>疑似中樞性性早熟 (CPP) 且 PAH 嚴重受損。<br><strong>行動：</strong>需轉介評估 GnRHa 治療。`;
                     } else if (pahStatus === 'good') {
                         title = "🟡 轉介評估 / 密切觀察 (PAH 尚可)";
                         colorClass = "alert-yellow";
@@ -450,10 +437,27 @@
                      html = `<strong>判斷：</strong>性徵進程緩慢，骨齡未超前。定期追蹤即可。`;
                 }
             }
+            else if (isNormalPubertySpurt) {
+                // 特殊判斷：如果是正常衝刺，但 PAH 顯示受損
+                if (pahStatus === 'poor') {
+                    title = "🟠 警示：青春期衝刺但預估身高受損";
+                    colorClass = "alert-orange";
+                    html = `
+                        <strong>判斷：</strong>目前生長速度正常(青春期衝刺)，但<strong>骨齡老化過快</strong>，導致預估身高 (PAH) 低於遺傳目標。<br>
+                        <strong>建議行動：</strong>
+                        1. 轉介兒科內分泌科，討論是否有延緩骨齡的空間。<br>
+                        2. 嚴格執行生活作息調整 (睡眠/飲食/運動) 以最大化剩餘潛力。
+                    `;
+                } else {
+                    title = "🟢 正常的青春期生長衝刺 (Pubertal Spurt)";
+                    colorClass = "alert-green";
+                    html = `<strong>判斷：</strong>年齡符合青春期，出現生長加速為正常生理現象。<br><strong>建議：</strong>觀察即可。目前 PAH 預估落點良好。`;
+                }
+            }
             else if (gv > 6) {
                 title = "🟢 觀察即可 (單純高大)";
                 colorClass = "alert-green";
-                html = `<strong>判斷：</strong>生長快速但無性徵，可能為遺傳高大或青春期衝刺。`;
+                html = `<strong>判斷：</strong>生長快速但無性徵，可能為遺傳高大或體質性快長。`;
             }
             else if (gv < 4) {
                  if (bmiStatus === 'thin') {
